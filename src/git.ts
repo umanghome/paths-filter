@@ -23,11 +23,11 @@ export async function getChanges(base: string, head: string): Promise<File[]> {
   const headRef = await ensureRefAvailable(head)
 
   // Get differences between ref and HEAD
-  core.startGroup(`Change detection ${base}..${head}`)
+  core.startGroup(`Change detection ${base}...${head}`)
   let output = ''
   try {
-    // Two dots '..' change detection - directly compares two versions
-    output = (await getExecOutput('git', ['diff', '--no-renames', '--name-status', '-z', `${baseRef}..${headRef}`]))
+    // Three dots '...' change detection
+    output = (await getExecOutput('git', ['diff', '--no-renames', '--name-status', '-z', `${baseRef}...${headRef}`]))
       .stdout
   } finally {
     fixStdOutNullTermination()
