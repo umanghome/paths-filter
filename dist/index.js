@@ -173,11 +173,11 @@ async function getChanges(base, head) {
     const baseRef = await ensureRefAvailable(base);
     const headRef = await ensureRefAvailable(head);
     // Get differences between ref and HEAD
-    core.startGroup(`Change detection ${base}..${head}`);
+    core.startGroup(`Change detection ${base}...${head}`);
     let output = '';
     try {
-        // Two dots '..' change detection - directly compares two versions
-        output = (await exec_1.getExecOutput('git', ['diff', '--no-renames', '--name-status', '-z', `${baseRef}..${headRef}`]))
+        // Three dots '...' change detection
+        output = (await exec_1.getExecOutput('git', ['diff', '--no-renames', '--name-status', '-z', `${baseRef}...${headRef}`]))
             .stdout;
     }
     finally {
