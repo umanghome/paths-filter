@@ -509,7 +509,6 @@ async function run() {
         if (workingDirectory) {
             process.chdir(workingDirectory);
         }
-        const token = core.getInput('token', { required: false });
         const ref = core.getInput('ref', { required: false });
         const base = core.getInput('base', { required: false });
         const filtersInput = core.getInput('filters', { required: true });
@@ -521,7 +520,7 @@ async function run() {
             return;
         }
         const filter = new filter_1.Filter(filtersYaml);
-        const files = await getChangedFiles(token, base, ref, initialFetchDepth);
+        const files = await getChangedFiles(base, ref, initialFetchDepth);
         core.info(`Detected ${files.length} changed files`);
         const results = filter.match(files);
         exportResults(results, listFiles);
@@ -542,7 +541,7 @@ function getConfigFileContent(configPath) {
     }
     return fs.readFileSync(configPath, { encoding: 'utf8' });
 }
-async function getChangedFiles(token, base, ref, initialFetchDepth) {
+async function getChangedFiles(base, ref, initialFetchDepth) {
     // if base is 'HEAD' only local uncommitted changes will be detected
     // This is the simplest case as we don't need to fetch more commits or evaluate current/before refs
     if (base === git.HEAD) {
@@ -551,30 +550,7 @@ async function getChangedFiles(token, base, ref, initialFetchDepth) {
         }
         return await git.getChangesOnHead();
     }
-    const prEvents = ['pull_request', 'pull_request_review', 'pull_request_review_comment', 'pull_request_target'];
-    if (prEvents.includes(github.context.eventName)) {
-        if (ref) {
-            core.warning(`'ref' input parameter is ignored when 'base' is set to HEAD`);
-        }
-        if (base) {
-            core.warning(`'base' input parameter is ignored when action is triggered by pull request event`);
-        }
-        const pr = github.context.payload.pull_request;
-        if (token) {
-            return await getChangedFilesFromApi(token, pr);
-        }
-        if (github.context.eventName === 'pull_request_target') {
-            // pull_request_target is executed in context of base branch and GITHUB_SHA points to last commit in base branch
-            // Therefor it's not possible to look at changes in last commit
-            // At the same time we don't want to fetch any code from forked repository
-            throw new Error(`'token' input parameter is required if action is triggered by 'pull_request_target' event`);
-        }
-        core.info('Github token is not available - changes will be detected from PRs merge commit');
-        return await git.getChangesInLastCommit();
-    }
-    else {
-        return getChangedFilesFromGit(base, ref, initialFetchDepth);
-    }
+    return getChangedFilesFromGit(base, ref, initialFetchDepth);
 }
 async function getChangedFilesFromGit(base, head, initialFetchDepth) {
     var _a;
